@@ -2,13 +2,13 @@
 import cgi
 import mysql.connector
 from mysql.connector import Error
+import traceback
 
 def log_error(error_message):
     with open("/home4/pagep82n/logs/cgi_error_log.txt", "w") as file:
         file.write(error_message + "\n")
 
 def create_table(cursor):
-    print("<p>creating table</p>")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS email_subscriptions (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -18,8 +18,20 @@ def create_table(cursor):
     """)
 
 print("Content-Type: text/html\n")
-print("<html><body>")
-
+print("""
+<html>
+<head>
+    <title>Email Subscription</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 40px; }
+        .container { background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .message { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="container">
+""")
 try:
     form = cgi.FieldStorage()
     email = form.getvalue('email')
@@ -38,17 +50,17 @@ try:
     if email:
         cursor.execute("INSERT INTO email_subscriptions (email) VALUES (%s)", (email,))
         conn.commit()
-        print("<p>Email saved successfully</p>")
+        print("<p class='message'>Email saved successfully</p>")
     else:
-        print("<p>No email provided</p>")
+        print("<p class='error'>No email provided</p>")
 
 except Exception as e:
-    print("<p>An error occurred.</p>")
+    print("<p class='error'>An error occurred.</p>")
     error_detail = traceback.format_exc()
     log_error(error_detail)
 
 finally:
-    print("<p>hello finally</p>")
+    print("</div>")
     print("</body></html>")
     if 'conn' in locals() and conn.is_connected():
         cursor.close()
