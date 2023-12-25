@@ -12,7 +12,7 @@ def create_table(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS email_subscriptions (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            email VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
             subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -48,9 +48,14 @@ try:
     create_table(cursor)
 
     if email:
-        cursor.execute("INSERT INTO email_subscriptions (email) VALUES (%s)", (email,))
-        conn.commit()
-        print("<p class='message'>Email saved successfully</p>")
+        # Check if email already exists in the database
+        cursor.execute("SELECT * FROM email_subscriptions WHERE email = %s", (email,))
+        if cursor.fetchone():
+            print("<p class='error'>Email already in the list</p>")
+        else:
+            cursor.execute("INSERT INTO email_subscriptions (email) VALUES (%s)", (email,))
+            conn.commit()
+            print("<p class='message'>Email saved successfully</p>")
     else:
         print("<p class='error'>No email provided</p>")
 
